@@ -1,0 +1,1 @@
+{"root":["./src/main.ts","./src/vite-env.d.ts","./src/composables/usesettings.ts","./src/i18n/index.ts","./src/i18n/locales/en.ts","./src/i18n/locales/es.ts","./src/prompts/match.ts","./src/services/ollama.ts","./src/services/parsecv.ts","./src/app.vue","./src/app/homeview.vue"],"version":"5.9.3"}
