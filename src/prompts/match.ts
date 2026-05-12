@@ -86,8 +86,8 @@ export function parseMatchResponse(raw: string): MatchResult | null {
         value: clamp(Number(f.value) || 0, 0, 100),
         note: String(f.note ?? ''),
       })),
-      matched: parsed.matched.map(String),
-      missing: parsed.missing.map(String),
+      matched: parsed.matched.map(coerceString),
+      missing: parsed.missing.map(coerceString),
       evidence: parsed.evidence.map((e) => ({
         tag: String(e.tag ?? ''),
         cv: String(e.cv ?? ''),
@@ -122,4 +122,13 @@ function extractFirstJsonObject(text: string): string | null {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
+}
+
+function coerceString(v: unknown): string {
+  if (typeof v === 'string') return v
+  if (v && typeof v === 'object') {
+    const vals = Object.values(v)
+    if (vals.length > 0 && typeof vals[0] === 'string') return vals[0]
+  }
+  return String(v)
 }

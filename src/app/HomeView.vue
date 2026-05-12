@@ -191,34 +191,35 @@ async function onSaveSettings(url: string): Promise<void> {
           @goto="gotoStep"
         />
 
-        <main
-          :key="step"
-          class="min-h-[720px]"
-          style="animation: step-in 460ms cubic-bezier(.2,.7,.2,1) both"
-        >
-          <StepCandidate
-            v-if="step === 1"
-            v-model:cv-file="cvFile"
-            v-model:cv-text="cvText"
-            @next="gotoStep(2)"
-          />
-          <StepPosting
-            v-else-if="step === 2"
-            v-model:jd-text="jdText"
-            @back="gotoStep(1)"
-            @next="runAnalysis"
-          />
-          <StepRun
-            v-else-if="step === 3"
-            :analyzing="analyzing"
-            @cancel="cancelAnalysis"
-          />
-          <StepVerdict
-            v-else-if="step === 4 && parsed"
-            :result="parsed"
-            @reset="resetAll"
-          />
-        </main>
+        <Transition name="step" mode="out-in">
+          <main
+            :key="step"
+            class="min-h-[720px]"
+          >
+            <StepCandidate
+              v-if="step === 1"
+              v-model:cv-file="cvFile"
+              v-model:cv-text="cvText"
+              @next="gotoStep(2)"
+            />
+            <StepPosting
+              v-else-if="step === 2"
+              v-model:jd-text="jdText"
+              @back="gotoStep(1)"
+              @next="runAnalysis"
+            />
+            <StepRun
+              v-else-if="step === 3"
+              :analyzing="analyzing"
+              @cancel="cancelAnalysis"
+            />
+            <StepVerdict
+              v-else-if="step === 4 && parsed"
+              :result="parsed"
+              @reset="resetAll"
+            />
+          </main>
+        </Transition>
       </div>
 
       <FlowFooter />
@@ -238,5 +239,19 @@ async function onSaveSettings(url: string): Promise<void> {
   background-image:
     linear-gradient(180deg, rgba(150,120,80,0.04), transparent 320px),
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='1.1' numOctaves='2' seed='5'/><feColorMatrix values='0 0 0 0 0.15  0 0 0 0 0.12  0 0 0 0 0.08  0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+.step-enter-active {
+  transition: opacity 360ms cubic-bezier(.2,.7,.2,1), transform 360ms cubic-bezier(.2,.7,.2,1);
+}
+.step-leave-active {
+  transition: opacity 200ms ease-in;
+}
+.step-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.step-leave-to {
+  opacity: 0;
 }
 </style>

@@ -52,7 +52,7 @@ export async function chat(opts: ChatOptions): Promise<string> {
     body: JSON.stringify({
       model: opts.model,
       messages: opts.messages,
-      stream: false,
+      stream: true,
     }),
     signal: opts.signal,
   })
@@ -62,10 +62,29 @@ export async function chat(opts: ChatOptions): Promise<string> {
     throw new Error(`Ollama chat failed (${res.status}): ${text}`)
   }
 
-  const data = (await res.json()) as {
-    message?: { content?: string }
-    error?: string
+  const reader = res.body?.getReader()
+  if (!reader) throw new Error('No response stream')
+
+  const decoder = new TextDecoder()
+  let full = ''
+
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    const chunk = decoder.decode(value, { stream: true })
+    for (const line of chunk.split('\n')) {
+      if (!line.trim()) continue
+      try {
+        const obj = JSON.parse(line) as { message?: { content?: string }; error?: string; done?: boolean }
+        if (obj.error) throw new Error(obj.error)
+        full += obj.message?.content ?? ''
+      } catch (e) {
+        if (e instanceof SyntaxError) continue
+        throw e
+      }
+    }
   }
-  if (data.error) throw new Error(data.error)
-  return data.message?.content ?? ''
+
+  return full
 }

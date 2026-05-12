@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import StepHead from './StepHead.vue'
 
@@ -11,7 +11,7 @@ defineEmits<{
   cancel: []
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const tick = ref(0)
 let interval: ReturnType<typeof setInterval> | null = null
@@ -30,14 +30,52 @@ const PASSES = [
   { label: 'runPass6', detail: 'runPass6Detail' },
 ]
 
-function elapsed(): number { return Math.min(1, (tick.value * 100) / 12000) }
-function pct(): number { return Math.round(elapsed() * 100) }
-function passIdx(): number { return Math.min(PASSES.length - 1, Math.floor(elapsed() * PASSES.length)) }
+const VERBS_EN = [
+  'Weighing evidence…',
+  'Comparing timelines…',
+  'Reviewing the fine print…',
+  'Cross-checking skills…',
+  'Forming an opinion…',
+  'Drafting the note…',
+  'Almost there…',
+]
+const VERBS_ES = [
+  'Sopesando evidencia…',
+  'Comparando cronologías…',
+  'Revisando la letra chica…',
+  'Cruzando habilidades…',
+  'Formando una opinión…',
+  'Redactando la nota…',
+  'Ya casi…',
+]
+
+// Ease-out curve hits 100% in ~18s, then switches to verb cycling
+const seconds = computed(() => (tick.value * 100) / 1000)
+const FILL_DURATION = 18
+const done = computed(() => seconds.value >= FILL_DURATION)
+function pct(): number {
+  if (done.value) return 100
+  const t = seconds.value / FILL_DURATION
+  return Math.round(t * (2 - t) * 100)
+}
+function passIdx(): number {
+  const ratio = done.value ? 1 : seconds.value / FILL_DURATION
+  return Math.min(PASSES.length - 1, Math.floor(ratio * (PASSES.length + 0.99)))
+}
+
+const currentVerb = computed(() => {
+  if (!done.value) return ''
+  const list = locale.value === 'es' ? VERBS_ES : VERBS_EN
+  const elapsed = seconds.value - FILL_DURATION
+  const idx = Math.floor(elapsed / 3) % list.length
+  return list[idx]
+})
+
 function phaseLabel(): string {
   const p = pct()
   if (p < 35) return t('runPhase1')
   if (p < 75) return t('runPhase2')
-  if (p < 99) return t('runPhase3')
+  if (p < 100) return t('runPhase3')
   return t('runPhase4')
 }
 </script>
@@ -54,15 +92,26 @@ function phaseLabel(): string {
     <div class="grid items-start gap-12" style="grid-template-columns: 1.2fr 1fr">
       <!-- Progress column -->
       <div>
-        <!-- Big numeral -->
-        <div class="mb-1.5 flex items-baseline gap-4">
-          <span class="font-display text-[96px] leading-none tracking-tighter" style="font-variant-numeric: tabular-nums">
-            {{ String(pct()).padStart(2, '0') }}
-          </span>
-          <span class="font-mono text-[13px] tracking-[0.1em]" style="color: var(--muted)">% read</span>
-          <span class="ml-2 font-display text-[22px] italic" style="color: var(--accent)">
-            {{ phaseLabel() }}
-          </span>
+        <!-- Big numeral / verb cycling -->
+        <div class="mb-1.5 flex items-baseline gap-4" style="min-height: 96px">
+          <template v-if="!done">
+            <span class="font-display text-[96px] leading-none tracking-tighter" style="font-variant-numeric: tabular-nums">
+              {{ String(pct()).padStart(2, '0') }}
+            </span>
+            <span class="font-mono text-[13px] tracking-[0.1em]" style="color: var(--muted)">% read</span>
+            <span class="ml-2 font-display text-[22px] italic" style="color: var(--accent)">
+              {{ phaseLabel() }}
+            </span>
+          </template>
+          <template v-else>
+            <span
+              :key="currentVerb"
+              class="verb-cycle font-display text-[38px] italic leading-tight"
+              style="color: var(--accent)"
+            >
+              {{ currentVerb }}
+            </span>
+          </template>
         </div>
 
         <!-- Progress bar -->
@@ -164,3 +213,13 @@ function phaseLabel(): string {
     </div>
   </div>
 </template>
+
+<style scoped>
+.verb-cycle {
+  animation: verb-fade 600ms cubic-bezier(.2,.7,.2,1) both;
+}
+@keyframes verb-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
