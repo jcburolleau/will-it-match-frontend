@@ -22,20 +22,20 @@ const { t } = useI18n()
   <div>
     <CvUploader v-model:cv-file="cvFile" v-model:cv-text="cvText" />
 
-    <section class="mb-6 rounded-2xl border border-slate-200 bg-white p-6">
-      <h2 class="mb-3 text-lg font-semibold text-slate-900">{{ t('jdSection') }}</h2>
+    <section class="glass-card mb-6 rounded-2xl p-6">
+      <h2 class="mb-3 text-lg font-semibold text-white">{{ t('jdSection') }}</h2>
       <textarea
         v-model="jdText"
         rows="10"
-        class="w-full rounded-lg border border-slate-300 p-3 text-sm"
+        class="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-slate-200 placeholder-slate-600 outline-none transition focus:border-violet-500/50"
         :placeholder="t('jdPlaceholder')"
       />
     </section>
 
     <div class="mb-6 flex items-center justify-end gap-3">
-      <p v-if="generalError" class="mr-auto text-sm text-red-600">{{ generalError }}</p>
+      <p v-if="generalError" class="mr-auto text-sm text-red-400">{{ generalError }}</p>
       <button
-        class="rounded-2xl bg-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+        class="rounded-2xl bg-gradient-to-r from-violet-600 to-blue-500 px-7 py-3 text-lg font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:from-violet-500 hover:to-blue-400 hover:shadow-violet-500/40 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
         :disabled="analyzing"
         @click="$emit('analyze')"
       >

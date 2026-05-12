@@ -25,7 +25,7 @@ const { t } = useI18n()
     <div class="mb-4 flex items-center justify-between">
       <button
         v-if="analyzing"
-        class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+        class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
         @click="$emit('cancel')"
       >
         <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -39,7 +39,7 @@ const { t } = useI18n()
       </button>
       <button
         v-else
-        class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+        class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
         @click="$emit('reset')"
       >
         <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

@@ -1,11 +1,25 @@
 import type { ChatMessage } from '../services/ollama'
 
+export interface FacetScore {
+  label: string
+  value: number
+  note: string
+}
+
+export interface EvidencePair {
+  tag: string
+  cv: string
+  jd: string
+  verdict: 'match' | 'gap'
+}
+
 export interface MatchResult {
   overall_score: number
-  summary: string
-  strengths: string[]
-  gaps: string[]
-  recommendations: string[]
+  verdict: string
+  breakdown: FacetScore[]
+  matched: string[]
+  missing: string[]
+  evidence: EvidencePair[]
 }
 
 export function buildMatchMessages(args: {
@@ -17,21 +31,26 @@ export function buildMatchMessages(args: {
   const system = `You are an expert technical recruiter. Compare a CV against a job description and return STRICT JSON only — no prose, no markdown code fences. Use this exact schema:
 {
   "overall_score": number (0-100),
-  "summary": string (1-2 sentences),
-  "strengths": string[] (3-6 items),
-  "gaps": string[] (3-6 items),
-  "recommendations": string[] (3-6 actionable items the candidate could do)
+  "verdict": string (1-2 sentences summarizing the fit),
+  "breakdown": [
+    { "label": string (facet name, e.g. "Skills overlap"), "value": number (0-100), "note": string (short explanation) }
+  ] (exactly 5 facets: skills overlap, experience level, tooling fluency, domain familiarity, soft signals),
+  "matched": string[] (4-8 skills/qualities that match between CV and JD),
+  "missing": string[] (2-4 skills/qualities the JD asks for that the CV lacks),
+  "evidence": [
+    { "tag": string (topic), "cv": string (what the CV says), "jd": string (what the JD asks), "verdict": "match" or "gap" }
+  ] (3-5 paired evidence entries comparing specific CV claims to JD requirements)
 }
 
 LANGUAGE RULE (critical, overrides everything else):
-- Every string value (summary, strengths, gaps, recommendations) MUST be written in ${language}.
+- Every string value MUST be written in ${language}.
 - This applies even if the CV or job description is written in a different language (French, German, Chinese, Portuguese, etc.). Translate any quoted terms or evidence into ${language}.
 - Do not mix languages. Do not echo the source language. The full output must read naturally to a ${language} speaker.
 
 VOICE RULE (critical):
 - Address the candidate directly in the second person. Do NOT refer to them by name and do NOT use the third person.
 - In ${language}, use the informal second-person form (Spanish: "tú" / "tienes" / "podrías"; English: "you" / "you have" / "you could"). Never write things like "Juan tiene…" or "the candidate has…" — write "tienes…" / "you have…" instead.
-- Apply this voice to the summary, strengths, gaps, and recommendations.
+- Apply this voice to the verdict and evidence entries.
 
 Be concrete and reference evidence from the CV and JD, but always express that evidence in ${language} and in the second person.`
 
@@ -51,19 +70,30 @@ export function parseMatchResponse(raw: string): MatchResult | null {
     const parsed = JSON.parse(jsonText) as Partial<MatchResult>
     if (
       typeof parsed.overall_score !== 'number' ||
-      typeof parsed.summary !== 'string' ||
-      !Array.isArray(parsed.strengths) ||
-      !Array.isArray(parsed.gaps) ||
-      !Array.isArray(parsed.recommendations)
+      typeof parsed.verdict !== 'string' ||
+      !Array.isArray(parsed.breakdown) ||
+      !Array.isArray(parsed.matched) ||
+      !Array.isArray(parsed.missing) ||
+      !Array.isArray(parsed.evidence)
     ) {
       return null
     }
     return {
       overall_score: clamp(parsed.overall_score, 0, 100),
-      summary: parsed.summary,
-      strengths: parsed.strengths.map(String),
-      gaps: parsed.gaps.map(String),
-      recommendations: parsed.recommendations.map(String),
+      verdict: parsed.verdict,
+      breakdown: parsed.breakdown.map((f) => ({
+        label: String(f.label ?? ''),
+        value: clamp(Number(f.value) || 0, 0, 100),
+        note: String(f.note ?? ''),
+      })),
+      matched: parsed.matched.map(String),
+      missing: parsed.missing.map(String),
+      evidence: parsed.evidence.map((e) => ({
+        tag: String(e.tag ?? ''),
+        cv: String(e.cv ?? ''),
+        jd: String(e.jd ?? ''),
+        verdict: e.verdict === 'gap' ? 'gap' as const : 'match' as const,
+      })),
     }
   } catch {
     return null

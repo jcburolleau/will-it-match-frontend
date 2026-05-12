@@ -14,14 +14,15 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <section class="mb-6 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-800">
-    <p class="font-semibold">
+  <section class="px-10 py-4 text-sm" style="border-bottom: 1px solid var(--hair); background: rgba(140,40,40,0.04)">
+    <p class="font-display text-base italic" style="color: oklch(38% 0.105 28)">
       {{ t('connectionError', { url }) }}
     </p>
-    <p class="mt-1">{{ t('connectionHelp') }}</p>
-    <p class="mt-2 font-mono text-xs text-red-700">{{ message }}</p>
+    <p class="mt-1 text-[13px]" style="color: rgba(30,26,22,0.7)">{{ t('connectionHelp') }}</p>
+    <p class="mt-2 font-mono text-xs" style="color: var(--muted)">{{ message }}</p>
     <button
-      class="mt-3 rounded border border-red-400 bg-white px-3 py-1 text-red-700 hover:bg-red-100"
+      class="mt-3 cursor-pointer font-mono text-[10px] uppercase tracking-[0.16em]"
+      style="background: transparent; border: 1px solid var(--hair); padding: 8px 14px; color: var(--muted)"
       @click="$emit('retry')"
     >
       {{ t('refreshModels') }}

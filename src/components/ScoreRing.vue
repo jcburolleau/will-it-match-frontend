@@ -17,13 +17,13 @@ const ringOffset = computed(() => {
 
 <template>
   <div class="relative h-32 w-32 shrink-0">
-    <svg viewBox="0 0 100 100" class="h-full w-full -rotate-90">
+    <svg viewBox="0 0 100 100" class="h-full w-full -rotate-90 drop-shadow-[0_0_15px_rgba(120,60,255,0.15)]">
       <circle
         cx="50"
         cy="50"
         r="42"
         fill="none"
-        stroke-width="10"
+        stroke-width="8"
         :class="ringTrack"
       />
       <circle
@@ -31,7 +31,7 @@ const ringOffset = computed(() => {
         cy="50"
         r="42"
         fill="none"
-        stroke-width="10"
+        stroke-width="8"
         stroke-linecap="round"
         :class="ringStroke"
         :stroke-dasharray="ringCircumference"
@@ -42,7 +42,7 @@ const ringOffset = computed(() => {
       <span class="text-3xl font-bold tabular-nums" :class="numberText">
         {{ Math.round(displayScore) }}
       </span>
-      <span class="text-xs font-medium text-slate-500">/ 100</span>
+      <span class="text-xs font-medium text-slate-600">/ 100</span>
     </div>
   </div>
 </template>
